@@ -1,51 +1,121 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import { useMemo, useState } from "react";
 import "./App.css";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
+type Route = "home" | "social" | "x";
 
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+export default function App() {
+  const [route, setRoute] = useState<Route>("home");
+
+  const header = useMemo(() => {
+    const title =
+      route === "home" ? "Nova" : route === "social" ? "Social Media" : "X Agent";
+    const subtitle =
+      route === "home"
+        ? "One-click AI employee system"
+        : route === "social"
+          ? "Choose a platform"
+          : "Create an AI employee for X";
+
+    return { title, subtitle };
+  }, [route]);
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+    <div className="nova-root">
+      <div className="nova-shell">
+        <header className="nova-header">
+          <div>
+            <div className="nova-title">{header.title}</div>
+            <div className="nova-subtitle">{header.subtitle}</div>
+          </div>
 
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+          <div className="nova-actions">
+            {route !== "home" && (
+              <button className="btn" onClick={() => setRoute("home")}>
+                Back
+              </button>
+            )}
+          </div>
+        </header>
+
+        <main className="nova-main">
+          {route === "home" && (
+            <div className="grid">
+              <button className="card" onClick={() => setRoute("social")}>
+                <div className="card-title">Social Media</div>
+                <div className="card-desc">X / TikTok / YouTube (WIP)</div>
+              </button>
+
+              <div className="card card-disabled">
+                <div className="card-title">Finance</div>
+                <div className="card-desc">Coming soon</div>
+              </div>
+            </div>
+          )}
+
+          {route === "social" && (
+            <div className="grid">
+              <button className="card" onClick={() => setRoute("x")}>
+                <div className="card-title">X</div>
+                <div className="card-desc">Auto post • Auto reply (later)</div>
+              </button>
+
+              <div className="card card-disabled">
+                <div className="card-title">TikTok</div>
+                <div className="card-desc">Coming soon</div>
+              </div>
+
+              <div className="card card-disabled">
+                <div className="card-title">YouTube</div>
+                <div className="card-desc">Coming soon</div>
+              </div>
+            </div>
+          )}
+
+          {route === "x" && <XAgentSetup />}
+        </main>
       </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+    </div>
   );
 }
 
-export default App;
+function XAgentSetup() {
+  const [apiKey, setApiKey] = useState("");
+  const [status, setStatus] = useState<"idle" | "ready">("idle");
+
+  return (
+    <div className="panel">
+      <div className="panel-title">Connect your AI</div>
+      <div className="panel-desc">
+        For MVP, we only need an LLM API key. X posting will be added next.
+      </div>
+
+      <label className="field">
+        <div className="label">LLM API Key</div>
+        <input
+          className="input"
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          placeholder="paste your key here"
+        />
+      </label>
+
+      <div className="row">
+        <button
+          className="btn primary"
+          onClick={() => setStatus(apiKey.trim() ? "ready" : "idle")}
+        >
+          Validate
+        </button>
+
+        <button className="btn" disabled={status !== "ready"}>
+          Start Agent (WIP)
+        </button>
+      </div>
+
+      <div className="hint">
+        Status:{" "}
+        <b>{status === "ready" ? "Ready ✅ (UI only for now)" : "Not ready"}</b>
+      </div>
+    </div>
+  );
+}
