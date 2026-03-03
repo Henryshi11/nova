@@ -12,6 +12,7 @@
   align-items: center;
 }
 
+/* ✅ shell 固定高度；内部 main 负责滚动 */
 .nova-shell {
   width: 820px;
   height: 560px;
@@ -44,9 +45,11 @@
   color: rgba(255, 255, 255, 0.6);
 }
 
+/* ✅ 关键：main 可滚动，不会把下面的 Run Prompt 裁掉 */
 .nova-main {
   padding: 18px;
   flex: 1;
+  overflow: auto;
 }
 
 .grid {
@@ -97,6 +100,12 @@
   max-width: 520px;
 }
 
+/* ✅ 如果内容太多，panel 内也可以滚动 */
+.panel {
+  max-height: calc(560px - 110px - 36px); /* shell height - header approx - padding */
+  overflow: auto;
+}
+
 .panel-title {
   font-size: 16px;
   font-weight: 800;
@@ -134,6 +143,7 @@
   display: flex;
   gap: 10px;
   margin-top: 14px;
+  flex-wrap: wrap; /* ✅ 小窗口时按钮会换行，不会挤没 */
 }
 
 .btn {
@@ -162,4 +172,10 @@
   margin-top: 12px;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.65);
+}
+
+.tiny-hint {
+  margin-top: 6px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
 }
