@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
+import { load } from "@tauri-apps/plugin-store";
 
 type Route = "home" | "social" | "x";
 
@@ -15,7 +16,6 @@ export default function App() {
         : route === "social"
           ? "Choose a platform"
           : "Create an AI employee for X";
-
     return { title, subtitle };
   }, [route]);
 
@@ -80,7 +80,40 @@ export default function App() {
 
 function XAgentSetup() {
   const [apiKey, setApiKey] = useState("");
-  const [status, setStatus] = useState<"idle" | "ready">("idle");
+  const [status, setStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [msg, setMsg] = useState("");
+
+  // ✅ store 用 load() 创建（避免 new Store 报 private）
+  useEffect(() => {
+    (async () => {
+      const store = await load("nova.store.json");
+
+      const saved = (await store.get("llm_api_key")) as string | null;
+      if (saved) {
+        setApiKey(saved);
+        setStatus("saved");
+        setMsg("Loaded saved key ✅");
+      }
+    })();
+  }, []);
+
+  async function validateAndSave() {
+    if (!apiKey.trim()) {
+      setStatus("idle");
+      setMsg("Please input an API key.");
+      return;
+    }
+
+    setStatus("saving");
+    setMsg("Saving...");
+
+    const store = await load("nova.store.json");
+    await store.set("llm_api_key", apiKey.trim());
+    await store.save();
+
+    setStatus("saved");
+    setMsg("Saved locally ✅");
+  }
 
   return (
     <div className="panel">
@@ -100,21 +133,25 @@ function XAgentSetup() {
       </label>
 
       <div className="row">
-        <button
-          className="btn primary"
-          onClick={() => setStatus(apiKey.trim() ? "ready" : "idle")}
-        >
-          Validate
+        <button className="btn primary" onClick={validateAndSave}>
+          {status === "saving" ? "Saving..." : "Validate"}
         </button>
 
-        <button className="btn" disabled={status !== "ready"}>
+        <button className="btn" disabled={status !== "saved"}>
           Start Agent (WIP)
         </button>
       </div>
 
       <div className="hint">
         Status:{" "}
-        <b>{status === "ready" ? "Ready ✅ (UI only for now)" : "Not ready"}</b>
+        <b>
+          {status === "saved"
+            ? "Ready ✅ (stored locally)"
+            : status === "saving"
+              ? "Saving..."
+              : "Not ready"}
+        </b>
+        <div style={{ marginTop: 6 }}>{msg}</div>
       </div>
     </div>
   );

@@ -37,3 +37,7 @@ src-tauri/target
 *.njsproj
 *.sln
 *.sw?
+
+# Tauri Store (local secrets)
+*.store.json
+nova.store.json
